@@ -1,6 +1,6 @@
 # F Term
 
-Under construction.
+A terminal emulator for Linux built in Flutter, designed to offer a lightweight, fast experience with a modern interface for executing commands on the system.
 
 
 ## Coverage
