@@ -1,15 +1,12 @@
+import 'package:f_term/src/common/state_management/state_management.dart';
+import 'package:f_term/src/features/term/models/terminal_state.dart';
 import 'package:f_term/src/features/term/models/terminal_tab_model.dart';
 import 'package:f_term/src/features/term/repositories/terminal_repository.dart';
-import 'package:flutter/foundation.dart';
 
-typedef _ViewModel = ChangeNotifier;
+typedef _ViewModel = StateManagement<TerminalState>;
 
 abstract interface class TerminalViewModel extends _ViewModel {
-  List<TerminalTabModel> get tabs;
-  int get currentTabIndex;
-  TerminalTabModel get currentTab;
-  bool get isExecuting;
-  List<String> get currentHistory;
+  TerminalViewModel(super.initialState);
 
   void addTab({String? title});
   void removeTab(int index);
@@ -22,108 +19,100 @@ abstract interface class TerminalViewModel extends _ViewModel {
 class TerminalViewModelImpl extends _ViewModel implements TerminalViewModel {
   final TerminalRepository terminalRepository;
 
-  TerminalViewModelImpl({required this.terminalRepository}) {
-    _tabs.add(TerminalTabModel.create(title: 'Terminal 1'));
-  }
-
-  final List<TerminalTabModel> _tabs = [];
-
-  @override
-  List<TerminalTabModel> get tabs => List.unmodifiable(_tabs);
-
-  int _currentTabIndex = 0;
-
-  @override
-  int get currentTabIndex => _currentTabIndex;
-
-  @override
-  TerminalTabModel get currentTab => _tabs[_currentTabIndex];
-
-  @override
-  bool get isExecuting => currentTab.isExecuting;
-
-  @override
-  List<String> get currentHistory => currentTab.history;
+  TerminalViewModelImpl({required this.terminalRepository})
+    : super(
+        TerminalState(
+          tabs: [TerminalTabModel.create(title: 'Terminal 1')],
+          currentTabIndex: 0,
+        ),
+      );
 
   @override
   void addTab({String? title}) {
     final newTab = TerminalTabModel.create(
-      title: title ?? 'Terminal ${_tabs.length + 1}',
+      title: title ?? 'Terminal ${state.tabs.length + 1}',
     );
-    _tabs.add(newTab);
-    _currentTabIndex = _tabs.length - 1;
-    notifyListeners();
+    emitState(
+      state.copyWith(
+        tabs: [...state.tabs, newTab],
+        currentTabIndex: state.tabs.length,
+      ),
+    );
   }
 
   @override
   void removeTab(int index) {
-    if (_tabs.length <= 1) {
-      return;
+    if (state.tabs.length <= 1) return;
+
+    final updatedTabs = List<TerminalTabModel>.from(state.tabs)
+      ..removeAt(index);
+
+    int newIndex = state.currentTabIndex;
+    if (newIndex >= updatedTabs.length) {
+      newIndex = updatedTabs.length - 1;
+    } else if (index < newIndex) {
+      newIndex--;
     }
 
-    _tabs.removeAt(index);
-
-    if (_currentTabIndex >= _tabs.length) {
-      _currentTabIndex = _tabs.length - 1;
-    } else if (index < _currentTabIndex) {
-      _currentTabIndex--;
-    }
-
-    notifyListeners();
+    emitState(state.copyWith(tabs: updatedTabs, currentTabIndex: newIndex));
   }
 
   @override
   void switchTab(int index) {
-    if (index >= 0 && index < _tabs.length && index != _currentTabIndex) {
-      _currentTabIndex = index;
-      notifyListeners();
+    if (index >= 0 &&
+        index < state.tabs.length &&
+        index != state.currentTabIndex) {
+      emitState(state.copyWith(currentTabIndex: index));
     }
   }
 
   @override
   void renameTab(int index, String newTitle) {
-    if (index >= 0 && index < _tabs.length && newTitle.trim().isNotEmpty) {
-      _tabs[index] = _tabs[index].copyWith(title: newTitle.trim());
-      notifyListeners();
+    if (index >= 0 &&
+        index < state.tabs.length &&
+        newTitle.trim().isNotEmpty) {
+      final updatedTabs = List<TerminalTabModel>.from(state.tabs);
+      updatedTabs[index] = updatedTabs[index].copyWith(title: newTitle.trim());
+      emitState(state.copyWith(tabs: updatedTabs));
     }
   }
 
   @override
   Future<void> executeCommand(String command) async {
-    if (command.trim().isEmpty || currentTab.isExecuting) return;
+    if (command.trim().isEmpty || state.isExecuting) return;
 
-    _tabs[_currentTabIndex] = currentTab.copyWith(
+    final executingTabs = List<TerminalTabModel>.from(state.tabs);
+    executingTabs[state.currentTabIndex] = state.currentTab.copyWith(
       isExecuting: true,
-      history: [...currentTab.history, '\$ $command'],
+      history: [...state.currentTab.history, '\$ $command'],
     );
-    notifyListeners();
+    emitState(state.copyWith(tabs: executingTabs));
 
     try {
       final result = await terminalRepository.executeCommand(command);
 
-      _tabs[_currentTabIndex] = currentTab.copyWith(
-        history: [...currentTab.history, result.displayText],
+      final resultTabs = List<TerminalTabModel>.from(state.tabs);
+      resultTabs[state.currentTabIndex] = state.currentTab.copyWith(
+        history: [...state.currentTab.history, result.displayText],
         isExecuting: false,
       );
+      emitState(state.copyWith(tabs: resultTabs));
     } catch (error) {
-      _tabs[_currentTabIndex] = currentTab.copyWith(
-        history: [...currentTab.history, 'Erro inesperado: $error'],
+      final errorTabs = List<TerminalTabModel>.from(state.tabs);
+      errorTabs[state.currentTabIndex] = state.currentTab.copyWith(
+        history: [...state.currentTab.history, 'Erro inesperado: $error'],
         isExecuting: false,
       );
+      emitState(state.copyWith(tabs: errorTabs));
     }
-
-    notifyListeners();
   }
 
   @override
   void clearCurrentTerminal() {
-    _tabs[_currentTabIndex] = currentTab.copyWith(history: []);
-    notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    _tabs.clear();
-    super.dispose();
+    final updatedTabs = List<TerminalTabModel>.from(state.tabs);
+    updatedTabs[state.currentTabIndex] = state.currentTab.copyWith(
+      history: [],
+    );
+    emitState(state.copyWith(tabs: updatedTabs));
   }
 }

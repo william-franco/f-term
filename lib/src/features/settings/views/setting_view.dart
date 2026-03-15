@@ -1,3 +1,5 @@
+import 'package:f_term/src/common/state_management/state_management.dart';
+import 'package:f_term/src/features/settings/models/setting_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:f_term/src/features/settings/view_models/setting_view_model.dart';
@@ -36,11 +38,11 @@ class SettingView extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.brightness_6_outlined),
               title: const Text('Dark theme'),
-              trailing: ListenableBuilder(
-                listenable: settingViewModel,
-                builder: (context, child) {
+              trailing: StateBuilderWidget<SettingViewModel, SettingModel>(
+                viewModel: settingViewModel,
+                builder: (context, settingModel) {
                   return Switch(
-                    value: settingViewModel.settingModel.isDarkTheme,
+                    value: settingModel.isDarkTheme,
                     onChanged: (bool isDarkTheme) {
                       settingViewModel.changeTheme(isDarkTheme: isDarkTheme);
                     },

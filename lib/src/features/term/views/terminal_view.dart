@@ -1,5 +1,7 @@
+import 'package:f_term/src/common/state_management/state_management.dart';
 import 'package:f_term/src/features/settings/routes/setting_routes.dart';
 import 'package:f_term/src/features/settings/view_models/setting_view_model.dart';
+import 'package:f_term/src/features/term/models/terminal_state.dart';
 import 'package:f_term/src/features/term/models/terminal_tab_model.dart';
 import 'package:f_term/src/features/term/view_models/terminal_view_model.dart';
 import 'package:flutter/material.dart';
@@ -37,31 +39,32 @@ class _TerminalViewState extends State<TerminalView>
 
   void _initializeTabController() {
     tabController = TabController(
-      length: widget.terminalViewModel.tabs.length,
+      length: widget.terminalViewModel.state.tabs.length,
       vsync: this,
-      initialIndex: widget.terminalViewModel.currentTabIndex,
+      initialIndex: widget.terminalViewModel.state.currentTabIndex,
     );
   }
 
   void _onTabControllerChanged() {
     if (!tabController.indexIsChanging &&
-        tabController.index != widget.terminalViewModel.currentTabIndex) {
+        tabController.index != widget.terminalViewModel.state.currentTabIndex) {
       widget.terminalViewModel.switchTab(tabController.index);
     }
   }
 
   void _onViewModelChanged() {
     _scrollToBottom();
-    if (tabController.length != widget.terminalViewModel.tabs.length) {
+    if (tabController.length !=
+        widget.terminalViewModel.state.tabs.length) {
       tabController.removeListener(_onTabControllerChanged);
-      final currentIndex = widget.terminalViewModel.currentTabIndex;
+      final currentIndex = widget.terminalViewModel.state.currentTabIndex;
       tabController.dispose();
       tabController = TabController(
-        length: widget.terminalViewModel.tabs.length,
+        length: widget.terminalViewModel.state.tabs.length,
         vsync: this,
         initialIndex: currentIndex.clamp(
           0,
-          widget.terminalViewModel.tabs.length - 1,
+          widget.terminalViewModel.state.tabs.length - 1,
         ),
       );
       tabController.addListener(_onTabControllerChanged);
@@ -69,19 +72,17 @@ class _TerminalViewState extends State<TerminalView>
         setState(() {});
       }
     } else if (tabController.index !=
-        widget.terminalViewModel.currentTabIndex) {
-      tabController.animateTo(widget.terminalViewModel.currentTabIndex);
+        widget.terminalViewModel.state.currentTabIndex) {
+      tabController.animateTo(widget.terminalViewModel.state.currentTabIndex);
     }
   }
 
   @override
   void dispose() {
-    // widget.terminalViewModel.removeListener(_onViewModelChanged);
     tabController.removeListener(_onTabControllerChanged);
     inputController.dispose();
     scrollController.dispose();
     tabController.dispose();
-    // widget.terminalViewModel.dispose();
     super.dispose();
   }
 
@@ -105,7 +106,7 @@ class _TerminalViewState extends State<TerminalView>
   }
 
   void _showRenameDialog(int index) {
-    final tab = widget.terminalViewModel.tabs[index];
+    final tab = widget.terminalViewModel.state.tabs[index];
     final controller = TextEditingController(text: tab.title);
 
     showDialog(
@@ -132,7 +133,6 @@ class _TerminalViewState extends State<TerminalView>
               child: const Text('Cancelar'),
               onPressed: () {
                 context.pop();
-                // Navigator.pop(context);
               },
             ),
             FilledButton(
@@ -151,7 +151,7 @@ class _TerminalViewState extends State<TerminalView>
     );
   }
 
-  Widget _buildTab(TerminalTabModel tab, int index) {
+  Widget _buildTab(TerminalTabModel tab, int index, int tabCount) {
     return Tab(
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -175,7 +175,7 @@ class _TerminalViewState extends State<TerminalView>
               _showRenameDialog(index);
             },
           ),
-          if (widget.terminalViewModel.tabs.length > 1)
+          if (tabCount > 1)
             Padding(
               padding: const EdgeInsets.only(left: 8.0),
               child: InkWell(
@@ -192,9 +192,9 @@ class _TerminalViewState extends State<TerminalView>
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: widget.terminalViewModel,
-      builder: (context, child) {
+    return StateBuilderWidget<TerminalViewModel, TerminalState>(
+      viewModel: widget.terminalViewModel,
+      builder: (context, state) {
         return Scaffold(
           appBar: AppBar(
             title: const Text('Terminal Emulator'),
@@ -224,17 +224,20 @@ class _TerminalViewState extends State<TerminalView>
               controller: tabController,
               isScrollable: true,
               tabAlignment: TabAlignment.start,
-              tabs: widget.terminalViewModel.tabs
+              tabs: state.tabs
                   .asMap()
                   .entries
-                  .map((entry) => _buildTab(entry.value, entry.key))
+                  .map(
+                    (entry) =>
+                        _buildTab(entry.value, entry.key, state.tabs.length),
+                  )
                   .toList(),
             ),
           ),
           body: TabBarView(
             controller: tabController,
             physics: const NeverScrollableScrollPhysics(),
-            children: widget.terminalViewModel.tabs.map((tab) {
+            children: state.tabs.map((tab) {
               return _buildTerminalContent(tab);
             }).toList(),
           ),
@@ -244,7 +247,7 @@ class _TerminalViewState extends State<TerminalView>
   }
 
   Widget _buildTerminalContent(TerminalTabModel tab) {
-    final isDarkTheme = widget.settingViewModel.settingModel.isDarkTheme;
+    final isDarkTheme = widget.settingViewModel.state.isDarkTheme;
     return Column(
       children: [
         Expanded(
