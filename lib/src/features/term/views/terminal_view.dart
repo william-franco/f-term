@@ -1,7 +1,7 @@
 import 'package:f_term/src/common/state_management/state_management.dart';
 import 'package:f_term/src/features/settings/routes/setting_routes.dart';
 import 'package:f_term/src/features/settings/view_models/setting_view_model.dart';
-import 'package:f_term/src/features/term/models/terminal_state.dart';
+import 'package:f_term/src/features/term/models/terminal_state_model.dart';
 import 'package:f_term/src/features/term/models/terminal_tab_model.dart';
 import 'package:f_term/src/features/term/view_models/terminal_view_model.dart';
 import 'package:flutter/material.dart';
@@ -54,8 +54,7 @@ class _TerminalViewState extends State<TerminalView>
 
   void _onViewModelChanged() {
     _scrollToBottom();
-    if (tabController.length !=
-        widget.terminalViewModel.state.tabs.length) {
+    if (tabController.length != widget.terminalViewModel.state.tabs.length) {
       tabController.removeListener(_onTabControllerChanged);
       final currentIndex = widget.terminalViewModel.state.currentTabIndex;
       tabController.dispose();
@@ -192,7 +191,7 @@ class _TerminalViewState extends State<TerminalView>
 
   @override
   Widget build(BuildContext context) {
-    return StateBuilderWidget<TerminalViewModel, TerminalState>(
+    return StateBuilderWidget<TerminalViewModel, TerminalStateModel>(
       viewModel: widget.terminalViewModel,
       builder: (context, state) {
         return Scaffold(

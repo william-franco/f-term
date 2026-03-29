@@ -5,13 +5,13 @@ class TerminalCommandResultModel {
   final String? errorMessage;
   final DateTime executedAt;
 
-  const TerminalCommandResultModel({
+  TerminalCommandResultModel({
     required this.output,
     required this.exitCode,
     required this.isSuccess,
     this.errorMessage,
     DateTime? executedAt,
-  }) : executedAt = executedAt ?? const Duration(milliseconds: 0) as DateTime;
+  }) : executedAt = executedAt ?? DateTime.now();
 
   factory TerminalCommandResultModel.success(
     String output, {

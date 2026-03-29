@@ -1,9 +1,9 @@
 import 'package:f_term/src/common/state_management/state_management.dart';
-import 'package:f_term/src/features/term/models/terminal_state.dart';
+import 'package:f_term/src/features/term/models/terminal_state_model.dart';
 import 'package:f_term/src/features/term/models/terminal_tab_model.dart';
 import 'package:f_term/src/features/term/repositories/terminal_repository.dart';
 
-typedef _ViewModel = StateManagement<TerminalState>;
+typedef _ViewModel = StateManagement<TerminalStateModel>;
 
 abstract interface class TerminalViewModel extends _ViewModel {
   TerminalViewModel(super.initialState);
@@ -21,7 +21,7 @@ class TerminalViewModelImpl extends _ViewModel implements TerminalViewModel {
 
   TerminalViewModelImpl({required this.terminalRepository})
     : super(
-        TerminalState(
+        TerminalStateModel(
           tabs: [TerminalTabModel.create(title: 'Terminal 1')],
           currentTabIndex: 0,
         ),
@@ -68,9 +68,7 @@ class TerminalViewModelImpl extends _ViewModel implements TerminalViewModel {
 
   @override
   void renameTab(int index, String newTitle) {
-    if (index >= 0 &&
-        index < state.tabs.length &&
-        newTitle.trim().isNotEmpty) {
+    if (index >= 0 && index < state.tabs.length && newTitle.trim().isNotEmpty) {
       final updatedTabs = List<TerminalTabModel>.from(state.tabs);
       updatedTabs[index] = updatedTabs[index].copyWith(title: newTitle.trim());
       emitState(state.copyWith(tabs: updatedTabs));
@@ -110,9 +108,7 @@ class TerminalViewModelImpl extends _ViewModel implements TerminalViewModel {
   @override
   void clearCurrentTerminal() {
     final updatedTabs = List<TerminalTabModel>.from(state.tabs);
-    updatedTabs[state.currentTabIndex] = state.currentTab.copyWith(
-      history: [],
-    );
+    updatedTabs[state.currentTabIndex] = state.currentTab.copyWith(history: []);
     emitState(state.copyWith(tabs: updatedTabs));
   }
 }

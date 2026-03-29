@@ -4,7 +4,7 @@ class TerminalTabModel {
   final List<String> history;
   final bool isExecuting;
 
-  const TerminalTabModel({
+  TerminalTabModel({
     required this.id,
     required this.title,
     this.history = const [],
