@@ -6,8 +6,6 @@ import 'package:f_term/src/features/term/repositories/terminal_repository.dart';
 typedef _ViewModel = StateManagement<TerminalStateModel>;
 
 abstract interface class TerminalViewModel extends _ViewModel {
-  TerminalViewModel(super.initialState);
-
   void addTab({String? title});
   void removeTab(int index);
   void switchTab(int index);
@@ -19,13 +17,13 @@ abstract interface class TerminalViewModel extends _ViewModel {
 class TerminalViewModelImpl extends _ViewModel implements TerminalViewModel {
   final TerminalRepository terminalRepository;
 
-  TerminalViewModelImpl({required this.terminalRepository})
-    : super(
-        TerminalStateModel(
-          tabs: [TerminalTabModel.create(title: 'Terminal 1')],
-          currentTabIndex: 0,
-        ),
-      );
+  TerminalViewModelImpl({required this.terminalRepository});
+
+  @override
+  TerminalStateModel build() => TerminalStateModel(
+    tabs: [TerminalTabModel.create(title: 'Terminal 1')],
+    currentTabIndex: 0,
+  );
 
   @override
   void addTab({String? title}) {
