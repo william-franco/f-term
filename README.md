@@ -1,12 +1,31 @@
 # F Term
 
-Lightweight Linux terminal emulator built with Flutter and a modern interface.
+Lightweight terminal emulator for Linux desktops, implemented with Flutter.
+
+Captures keyboard input, renders a scrollable buffer, and mimics a familiar shell experience.
+
+Modular features split the terminal view, settings, and shared services.
+
+Useful as a reference for desktop Flutter, custom text input, and terminal-style UI.
+
+Designed for local use without remote shell integration in the sample scope.
+
+## Structure
+
+```mermaid
+flowchart LR
+  TerminalView --> TermViewModel
+  TermViewModel --> ShellBuffer
+  TermViewModel --> KeyboardInput
+  ShellBuffer --> TerminalOutput
+  TermViewModel --> SettingsStore
+```
 
 ## Stack
 
 | Technology | Version |
 |------------|---------|
-| Dart SDK | ^3.13.2 |
+| Dart SDK | ^3.13.3 |
 | cupertino_icons | ^1.0.8 |
 | get_it | ^9.2.1 |
 | go_router | ^17.2.3 |
