@@ -25,7 +25,7 @@ flowchart LR
 
 | Technology | Version |
 |------------|---------|
-| Dart SDK | ^3.13.5 |
+| Dart SDK | ^3.13.7 |
 | cupertino_icons | ^1.0.8 |
 | get_it | ^9.3.0 |
 | go_router | ^18.0.2 |
